@@ -43,9 +43,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.programming.personalfinance.R
 import com.programming.personalfinance.ui.theme.primaryGray
+import com.programming.personalfinance.utils.CustomToast
 
 @Composable
-fun LoginScreen(moveToNext: () -> Unit) {
+fun LoginScreen(moveToNext: (String, String) -> Unit) {
     var isSignUpAccount by remember { mutableStateOf(true) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -71,7 +72,7 @@ fun LoginScreen(moveToNext: () -> Unit) {
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Card(
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -190,7 +191,22 @@ fun LoginScreen(moveToNext: () -> Unit) {
                 Spacer(modifier = Modifier.height(30.dp))
 
                 Button(
-                    onClick = moveToNext,
+                    onClick = {
+                        if (email.isEmpty()) {
+                            CustomToast(
+                                message = "Email is empty",
+                                iconRes = R.drawable.ic_error,
+                                onDismiss = {
+
+                                }
+                            )
+
+                        } else if (password.isEmpty()) {
+
+                        } else {
+                            moveToNext(email,password)
+                        }
+                    },
                     modifier = Modifier.padding(bottom = 8.dp),
                     shape = RoundedCornerShape(30), // fully rounded corners
                     colors = ButtonDefaults.buttonColors(

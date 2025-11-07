@@ -2,7 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.gms.google-services")
+    alias(libs.plugins.google.gms.google.services)
+    id("kotlin-kapt")
+    id("dagger.hilt.android.plugin")
 }
 
 android {
@@ -62,4 +64,35 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     implementation(libs.androidx.navigation.compose)
+
+    //    hilt
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+    //dagger
+//    implementation(libs.dagger)
+//    kapt(libs.dagger.compiler)
+//    implementation(libs.dagger.android)
+//    kapt(libs.dagger.android.processor)
+    //viewmodel
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    // coroutines
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+    // navigation
+    implementation(libs.androidx.navigation.compose)
+
+    //roomdb
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
+
+    //
+    implementation(libs.gson)
+    //firebase
+    implementation(libs.firebase.database)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth.ktx)
+
 }
