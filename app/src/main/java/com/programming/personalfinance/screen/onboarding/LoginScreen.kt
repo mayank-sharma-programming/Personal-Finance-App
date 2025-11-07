@@ -1,5 +1,7 @@
 package com.programming.personalfinance.screen.onboarding
 
+import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -11,28 +13,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -41,16 +43,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.programming.personalfinance.MainActivity
 import com.programming.personalfinance.R
+import com.programming.personalfinance.model.User
+import com.programming.personalfinance.state.AuthState
 import com.programming.personalfinance.ui.theme.primaryGray
 import com.programming.personalfinance.utils.CustomToast
+import com.programming.personalfinance.viewmodel.MainViewModel
 
 @Composable
-fun LoginScreen(moveToNext: (String, String) -> Unit) {
-    var isSignUpAccount by remember { mutableStateOf(true) }
+fun LoginScreen(activity: OnBoardingActivity,viewmodel: MainViewModel = hiltViewModel()) {
+    val context = LocalContext.current
+    var isLoginView by remember { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
+    val authState by viewmodel.authResult.observeAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -69,7 +79,8 @@ fun LoginScreen(moveToNext: (String, String) -> Unit) {
                     .fillMaxWidth()
                     .padding(10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            )
+            {
                 Spacer(modifier = Modifier.height(16.dp))
                 Card(
                     shape = RoundedCornerShape(16.dp),
@@ -89,11 +100,11 @@ fun LoginScreen(moveToNext: (String, String) -> Unit) {
                                 .weight(1f)
                                 .fillMaxHeight()
                                 .background(
-                                    if (isSignUpAccount) primaryGray else Color.White,
+                                    if (!isLoginView) primaryGray else Color.White,
                                     shape = RoundedCornerShape(16.dp)
                                 )
                                 .clickable {
-                                    isSignUpAccount = !isSignUpAccount
+                                    isLoginView = !isLoginView
                                 },
                             contentAlignment = Alignment.Center, // centers the text
 
@@ -104,7 +115,7 @@ fun LoginScreen(moveToNext: (String, String) -> Unit) {
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp
                                 ),
-                                color = if (isSignUpAccount) Color.White else primaryGray,
+                                color = if (!isLoginView) Color.White else primaryGray,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -115,11 +126,11 @@ fun LoginScreen(moveToNext: (String, String) -> Unit) {
                                 .weight(1f)
                                 .fillMaxHeight()
                                 .background(
-                                    if (!isSignUpAccount) primaryGray else Color.White,
+                                    if (isLoginView) primaryGray else Color.White,
                                     shape = RoundedCornerShape(16.dp)
                                 )
                                 .clickable {
-                                    isSignUpAccount = !isSignUpAccount
+                                    isLoginView = !isLoginView
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -129,7 +140,7 @@ fun LoginScreen(moveToNext: (String, String) -> Unit) {
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp
                                 ),
-                                color = if (!isSignUpAccount) Color.White else primaryGray,
+                                color = if (isLoginView) Color.White else primaryGray,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -192,19 +203,12 @@ fun LoginScreen(moveToNext: (String, String) -> Unit) {
 
                 Button(
                     onClick = {
-                        if (email.isEmpty()) {
-                            CustomToast(
-                                message = "Email is empty",
-                                iconRes = R.drawable.ic_error,
-                                onDismiss = {
-
-                                }
-                            )
-
-                        } else if (password.isEmpty()) {
-
-                        } else {
-                            moveToNext(email,password)
+                        if (email.isNotBlank() && password.isNotBlank()) {
+                            if (!isLoginView) {
+                                viewmodel.saveUserAuth(User(email = email, password = password))
+                            } else {
+                                viewmodel.signInAccount(User(email = email, password = password))
+                            }
                         }
                     },
                     modifier = Modifier.padding(bottom = 8.dp),
@@ -216,7 +220,7 @@ fun LoginScreen(moveToNext: (String, String) -> Unit) {
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
                     Text(
-                        text = if (isSignUpAccount) "Sign Up" else "Log In",
+                        text = if (!isLoginView) "Sign Up" else "Log In",
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center
                     )
@@ -224,13 +228,50 @@ fun LoginScreen(moveToNext: (String, String) -> Unit) {
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+        when (authState) {
+            is AuthState.Loading -> {
+                CircularProgressIndicator()
+            }
+
+            is AuthState.Error -> {
+                CustomToast(
+                    message = (authState as AuthState.Error).message,
+                    iconRes = R.drawable.ic_error
+                ) {
+
+                }
+            }
+
+            is AuthState.Success<String> -> {
+                Log.e("TAG", "LoginScreen: $authState")
+                if(isLoginView){
+                    val intent = Intent(context, MainActivity::class.java)
+                    context.startActivity(intent)
+                    activity.finishAffinity()
+                }else{
+                    email = ""
+                    password = ""
+                    isLoginView = false
+                }
+                CustomToast(
+                    message = (authState as AuthState.Success).data,
+                    iconRes = R.drawable.ic_error
+                ) {
+
+                }
+
+            }
+
+            else -> {
+
+            }
+        }
+
     }
 }
 
 @Preview
 @Composable
 fun LoginScreenPreview() {
-    LoginScreen {
-
-    }
+//    LoginScreen()
 }

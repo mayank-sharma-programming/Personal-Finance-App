@@ -94,5 +94,9 @@ dependencies {
     implementation(libs.firebase.database)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.ktx)
+    implementation(libs.androidx.runtime.livedata)
+
+    implementation(libs.play.services.auth)
+
 
 }
